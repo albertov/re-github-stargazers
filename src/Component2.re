@@ -30,7 +30,7 @@ let make = (~greeting, _children) => {
 
   render: self => {
     let message =
-      "You've clicked this " ++ string_of_int(self.state.count) ++ " times(s)";
+      {js|Clickaste ésto |js} ++ string_of_int(self.state.count) ++ " vez(es)";
     <div>
       <button onClick=(_event => self.send(Click))>
         (ReasonReact.string(message))
@@ -38,7 +38,7 @@ let make = (~greeting, _children) => {
       <button onClick=(_event => self.send(Toggle))>
         (ReasonReact.string("Toggle greeting"))
       </button>
-      (self.state.show ? ReasonReact.string(greeting) : ReasonReact.null)
+      (self.state.show ? <span>(ReasonReact.string(greeting))</span> : ReasonReact.null)
     </div>;
   },
 };

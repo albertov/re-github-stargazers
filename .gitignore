@@ -8,3 +8,4 @@ npm-debug.log
 build
 .build-home
 *.sw?
+yarn-error.log
