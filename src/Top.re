@@ -130,13 +130,15 @@ let make = (~orgname, ~client=defaultClient, _children) => {
                     </div>
 
                     <div className="column" ref=setStargazersPanelRef>
-                        <h2 className="header">(string("Stargazers"))</h2>
                         (switch(state.selectedRepo) {
                             | Some(repo) =>
-                                <Stargazers
-                                    url=repo.stargazerUrl
-                                    fetchStargazers=client.fetchStargazers
-                                    />
+                                <div>
+                                    <h2 className="header">(string(repo.fullName ++ "'s stargazers"))</h2>
+                                    <Stargazers
+                                        url=repo.stargazerUrl
+                                        fetchStargazers=client.fetchStargazers
+                                        />
+                                </div>
                             | None => null
                         })
                     </div>
