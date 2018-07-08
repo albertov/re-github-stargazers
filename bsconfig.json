@@ -28,7 +28,8 @@
   ],
   "bs-dev-dependencies": [
     "@glennsl/bs-jest",
-    "bs-enzyme"
+    "bs-enzyme",
+    "bs-node"
   ],
   "refmt": 3
 }

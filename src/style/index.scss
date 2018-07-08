@@ -2,6 +2,24 @@ $icons-font-path: '~semantic-ui-sass/icons';
 
 @import '~semantic-ui-sass/scss/globals/all';
 // @import '~semantic-ui-sass/scss/elements/all';
+@import '~semantic-ui-sass/scss/elements/list';
+@import '~semantic-ui-sass/scss/elements/segment';
+@import '~semantic-ui-sass/scss/elements/icon';
+@import '~semantic-ui-sass/scss/elements/image';
+@import '~semantic-ui-sass/scss/elements/container';
+@import '~semantic-ui-sass/scss/elements/input';
+@import '~semantic-ui-sass/scss/collections/grid';
 // @import '~semantic-ui-sass/scss/collections/all';
 // @import '~semantic-ui-sass/scss/views/all';
 // @import '~semantic-ui-sass/scss/modules/all';
+
+.repository {
+    .license {
+        display: block;
+    }
+}
+
+.ui.layout.grid .column:first-child {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+}
