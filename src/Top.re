@@ -1,5 +1,7 @@
 open Github;
 
+[@bs.val] external scrollTo : (int, int) => unit = "";
+
 type action =
   | Init
   | GetRepositories(bool)
@@ -14,7 +16,8 @@ type state = {
     selectedRepo: option(repository),
     nextPageUrl: option(string),
     lastError: option(Js.Promise.error),
-    loading: bool
+    loading: bool,
+    stargazersPanelRef: ref(option(Dom.element))
 };
 
 type client = {
@@ -38,7 +41,9 @@ let make = (~orgname, ~client=defaultClient, _children) => {
         selectedRepo: None,
         nextPageUrl: None,
         lastError: None,
-        loading: false
+        loading: false,
+        stargazersPanelRef: ref(None)
+
     },
 
     didMount: self => self.send(Init),
@@ -79,12 +84,19 @@ let make = (~orgname, ~client=defaultClient, _children) => {
             ReasonReact.UpdateWithSideEffects({...state, orgname, nextPageUrl:None}, getRepositories));
 
         | SetSelected(repo) => (state =>
-            ReasonReact.Update({...state, selectedRepo:Some(repo)}));
+            ReasonReact.UpdateWithSideEffects({...state, selectedRepo:Some(repo)}, (self =>
+                switch(state.stargazersPanelRef^) {
+                | Some(r) => scrollTo(0, ReactDOMRe.domElementToObj(r)##offsetTop)
+                | None    => ()
+                }
+            )));
         }
     },
 
-    render: ({state,send}) => {
+    render: ({state,send,handle}) => {
         open ReasonReact;
+        let setStargazersPanelRef = handle((ref,{state}) =>
+            state.stargazersPanelRef := Js.Nullable.toOption(ref));
         <div className="ui container">
             <TextInput value=state.orgname onChange=(orgname => (send(SetOrgname(orgname)))) />
             <div className="ui segment">
@@ -97,7 +109,10 @@ let make = (~orgname, ~client=defaultClient, _children) => {
                                 | Some(repos) => array(Array.map((repository =>
                                     <Repository
                                         repository
-                                        onStargazersClick=(_ => send(SetSelected(repository)))
+                                        onStargazersClick=(ev => {
+                                            ReactEventRe.Mouse.preventDefault(ev);
+                                            send(SetSelected(repository))
+                                        })
                                         />
                                     ), repos))
                                 | None => null
@@ -114,7 +129,7 @@ let make = (~orgname, ~client=defaultClient, _children) => {
                         })
                     </div>
 
-                    <div className="column">
+                    <div className="column" ref=setStargazersPanelRef>
                         <h2 className="header">(string("Stargazers"))</h2>
                         (switch(state.selectedRepo) {
                             | Some(repo) =>
