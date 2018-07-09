@@ -39,7 +39,7 @@ describe("Main", () => {
    * triggers a signal emission) seems to be the initial one, not the one expected
    * after an application of the reducer.
    * 
-   * After some "leave a bomb, let's here see if it goes off" debugging I've confirmed
+   * After some "leave a bomb here, let's see if it goes off" debugging I've confirmed
    * that the reducer is actually called after the event handlers send their signals, it's
    * just that it's not the internal `reasonState` that `Enzyme.state` retrieves is not
    * the "reduced" one.
