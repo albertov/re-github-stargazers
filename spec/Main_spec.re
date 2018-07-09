@@ -1,4 +1,5 @@
 open Jest;
+open Github;
 
 Enzyme.configureEnzyme(Enzyme.react_16_adapter());
 
@@ -8,17 +9,17 @@ Enzyme.configureEnzyme(Enzyme.react_16_adapter());
 let repoFixture =
     Node.Fs.readFileAsUtf8Sync ("spec/data/repos.json")
     |> Js.Json.parseExn
-    |> Json.Decode.(array(Github.Decode.repository));
+    |> Json.Decode.(array(Decode.repository));
 
 let stargazersFixture =
     Node.Fs.readFileAsUtf8Sync ("spec/data/stargazers.json")
     |> Js.Json.parseExn
-    |> Json.Decode.(array(Github.Decode.stargazer));
+    |> Json.Decode.(array(Decode.stargazer));
 
 /* a dummy client we inject as a mock to test the reducer */
-let testClient: Github.client = {
-    fetchOrgRepositories: _ => Js.Promise.resolve(Either.Right((None, repoFixture))),
-    fetchStargazers: _ => Js.Promise.resolve(Either.Right((None, stargazersFixture)))
+let testClient: client = {
+    fetchOrgRepositories: _ => Js.Promise.resolve(Success(repoFixture,None)),
+    fetchStargazers: _ => Js.Promise.resolve(Success(stargazersFixture,None))
 }
 
 let setup = (~orgname="facebook", ~maxStargazers=20, ~client=testClient, ()) =>
@@ -102,7 +103,7 @@ describe("Main", () => {
     test("shows a .link.more node when there's more to load", () => {
       let wrapper = setup();
       wrapper
-        |. EnzymeExtra.modifyState(s:Main.state => {...s, nextPageUrl:Some("foo")});
+        |. EnzymeExtra.modifyState(s:Main.state => {...s, repositories:Some(Success([||], Some("foo")))});
       let nodes = wrapper |> Enzyme.find(".link.more");
       expect(Enzyme.length(nodes)) |> toBe(1);
     });
@@ -117,7 +118,7 @@ describe("Main", () => {
       let wrapper = setup();
       wrapper
         |. EnzymeExtra.modifyState(s:Main.state =>
-            {...s, repositories:Some(repoFixture)}
+            {...s, repositories:Some(Success(repoFixture,None))}
             );
       let nodes = wrapper |> Enzyme.find(".repository");
       expect(Enzyme.length(nodes)) |> toBe(30);
@@ -134,7 +135,7 @@ describe("Main", () => {
       let wrapper = setup(~maxStargazers, ());
       wrapper
         |. EnzymeExtra.modifyState(s:Main.state =>
-            {...s, stargazers:Some(stargazersFixture)}
+            {...s, stargazers:Some(Success(stargazersFixture,None))}
             );
       let nodes = wrapper |> Enzyme.find(".stargazer");
       expect(Enzyme.length(nodes)) |> toBeLessThanOrEqual(maxStargazers);
@@ -166,7 +167,7 @@ describe("Main", () => {
         |> catch(error => {
             wrapper
               |. EnzymeExtra.modifyState(s:Main.state =>
-                  {...s, lastError:Some(error)}
+                  {...s, repositories:Some(NetworkError(error))}
                   );
             let nodes = wrapper
               |> Enzyme.find(".error.message");

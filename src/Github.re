@@ -1,5 +1,3 @@
-open Either;
-
 type license = {
     name: string,
     spdxId: string
@@ -51,7 +49,13 @@ let nextPageUrl : Fetch.Headers.t => option(string) = hdrs => {
         |> Js.Option.andThen((.m)=>Js.toOption(Js.Re.captures(m)[1])));
 }
 
-type fetchResponse ('a) = either(Js.Promise.error, (option(string), 'a));
+type fetchResponse('a) =
+  | Success('a, option(string))
+  | NetworkError(Js.Promise.error)
+  | DecodeError(exn)
+  | NotFound
+  | UnexpectedStatus(int)
+  ;
 
 /***
  * `decodeResponse` decodes a `Fetch.Response` into an `fetchResponse`
@@ -60,17 +64,25 @@ type fetchResponse ('a) = either(Js.Promise.error, (option(string), 'a));
  */
 let decodeResponse = f => promise => {
     open Js.Promise;
+    let tryDecode = (next, text) =>
+        try(text |> Js.Json.parseExn |> f |> (value=>Success(value,next))) {
+        | err => DecodeError(err);
+        };
+
     promise
     |> then_(resp => {
-        let next = nextPageUrl(Fetch.Response.headers(resp));
-        Fetch.Response.text(resp)
-        |> then_ (text =>
-            text
-            |> Js.Json.parseExn
-            |> f
-            |> (v => resolve (Right ((next, v)))));
+        let status = Fetch.Response.status(resp);
+        if (status >= 200 && status < 400) {
+            let next = nextPageUrl(Fetch.Response.headers(resp));
+            Fetch.Response.text(resp)
+            |> then_ (text => text |> tryDecode(next) |> resolve);
+        } else if (status==404) {
+            resolve(NotFound)
+        } else {
+            resolve(UnexpectedStatus(status))
+        }
     })
-    |> catch (err => resolve(Left(err)));
+    |> catch(err => resolve(NetworkError(err)));
 };
 
 let orgReposUrl = orgname =>

@@ -14,15 +14,17 @@ module Stargazer = {
 
 let component = ReasonReact.statelessComponent("Stargazers");
 
-let make = (~stargazers, _children) => {
+let make = (~stargazers, ~maxStargazers=20, _children) => {
     ...component,
     render: _self => {
+        let limitedStargazers = {
+            let count = Js.Math.min_int(maxStargazers, Array.length(stargazers));
+            Array.sub(stargazers, 0, count);
+        };
         <div className="ui list stargazers">
-            (switch(stargazers) {
-            | Some(gazers) => ReasonReact.array(gazers |> Array.map(value=>
-                <Stargazer value key=value. Github.login />))
-            | None => ReasonReact.null
-            })
+            (ReasonReact.array(limitedStargazers |> Array.map(value =>
+                <Stargazer value key=value. Github.login />
+            )))
         </div>
     }
 }
