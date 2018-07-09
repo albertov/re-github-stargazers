@@ -48,18 +48,19 @@ module Repository = {
 
 let component = ReasonReact.statelessComponent("Repositories");
 
-let make = (~repositories:array(Github.repository), ~onStargazersClick=(_=>()), children) => {
+let make = (~repositories:array(Github.repository), ~onStargazersClick=(_=>()), _children) => {
     ...component,
     render: _self =>
         <div className="ui list">
-            (array(Array.map((repository =>
+            (array(repositories |> Array.map(repository =>
             <Repository
+                key=repository. Github.fullName 
                 repository
                 onStargazersClick=(ev => {
                     ReactEventRe.Mouse.preventDefault(ev);
                     onStargazersClick(repository)
                 })
                 />
-            ), repositories)))
+            )))
         </div>
 };

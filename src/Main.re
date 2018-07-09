@@ -2,6 +2,23 @@ open Github;
 
 [@bs.val] external scrollTo : (int, int) => unit = "";
 
+module ErrorMessage = {
+    let component = ReasonReact.statelessComponent("ErrorMessage");
+    let make = (~value, ~onClose=(_=>()), children) => ReasonReact.({
+        ...component,
+        render: _self =>
+            <div className="ui error message">
+                <i className="close icon" onClick=onClose />
+                <div className="header">
+                    (string("There was an error when communicating with the API"))
+                </div>
+                /* FIXME: Can we do better tah n stringifyAny? */
+                <p>(string(Js.Option.default("", Js.Json.stringifyAny(value))))</p>
+                (array(children))
+            </div>
+    });
+};
+
 type action =
   | Init
   | GetRepositories(bool)
@@ -10,6 +27,7 @@ type action =
   | GotStargazers(fetchResponse(array(stargazer)))
   | SetSelected(repository)
   | SetOrgname(string)
+  | ClearLastError
   ;
 
 type state = {
@@ -97,10 +115,11 @@ let mkReducer = (~client=defaultClient, ~maxStargazers=20, ()) => action => {
             {...state, selectedRepo:Some(repo)},
             (self => self.send(GetStargazers)))
         );
+    | ClearLastError => (state => ReasonReact.Update({...state, lastError:None}))
     }
 }
 
-let component = ReasonReact.reducerComponent("ReGitHubStargazers");
+let component = ReasonReact.reducerComponent("Main");
 
 let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
     ...component,
@@ -124,7 +143,7 @@ let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
 
     render: ({state,send,handle}) => ReasonReact.({
         let reposColumn =
-            <div className="column">
+            <div className="repositories column">
                 <h2 className="header">
                     (string(state.orgname ++ "'s repositories"))
                 </h2>
@@ -139,6 +158,7 @@ let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
                 (switch (state.nextPageUrl) {
                 | Some(_) =>
                     <a href="#"
+                       className="link more"
                         onClick=(ev => {
                             ReactEventRe.Mouse.preventDefault(ev);
                             send(GetRepositories(true));
@@ -151,7 +171,7 @@ let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
         let stargazersColumn =
             switch(state.selectedRepo) {
             | Some(repo) =>
-                <div className="column" ref=setStargazersPanelRef>
+                <div className="stargazers column" ref=setStargazersPanelRef>
                     <h2 className="header">
                         (string(repo.fullName ++ "'s stargazers"))
                     </h2>
@@ -165,6 +185,11 @@ let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
                 value=state.orgname
                 onChange=(orgname => (send(SetOrgname(orgname))))
                 />
+            (switch(state.lastError) {
+            | Some(value) =>
+                <ErrorMessage value onClose=(_=> send(ClearLastError)) />
+            | None => ReasonReact.null
+            })
             <div className="ui segment">
                 <div className="ui two column stackable grid layout">
                     reposColumn

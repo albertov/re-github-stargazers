@@ -19,7 +19,8 @@ let make = (~stargazers, _children) => {
     render: _self => {
         <div className="ui list stargazers">
             (switch(stargazers) {
-            | Some(gazers) => ReasonReact.array(Array.map((value=> <Stargazer value />), gazers))
+            | Some(gazers) => ReasonReact.array(gazers |> Array.map(value=>
+                <Stargazer value key=value. Github.login />))
             | None => ReasonReact.null
             })
         </div>
