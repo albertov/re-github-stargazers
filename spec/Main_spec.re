@@ -65,6 +65,9 @@ describe("Main", () => {
    * 
    * This should offer pretty good coverage, leaving only the event-handlers which emit the signals
    * untested. We should limit the damage by keeping these very small.
+   * 
+   * However, I find it very unsatisfactory that we need to poke into the implementation details
+   * like this since it makes the tests more brittle.
 
   test("loads repositories when search is clicked", () => {
     let wrapper = setup();
