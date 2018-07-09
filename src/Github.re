@@ -85,3 +85,14 @@ let fetchOrgRepositories: getRepositories = url =>
 
 let fetchStargazers: getStargazers = url =>
     Fetch.fetch(url) |> decodeResponse(Json.Decode.(array(Decode.stargazer)));
+
+
+type client = {
+    fetchOrgRepositories: getRepositories,
+    fetchStargazers: getStargazers
+}
+
+let defaultClient = {
+    fetchOrgRepositories: fetchOrgRepositories,
+    fetchStargazers: fetchStargazers
+};

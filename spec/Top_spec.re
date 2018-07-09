@@ -12,7 +12,7 @@ let testStargazers =
     |> Js.Json.parseExn
     |> Json.Decode.(array(Github.Decode.stargazer));
 
-let testClient: Top.client = {
+let testClient: Github.client = {
     fetchOrgRepositories: _ => Js.Promise.resolve(Either.Right((None, testRepos))),
     fetchStargazers: _ => Js.Promise.resolve(Either.Right((None, testStargazers)))
 }
