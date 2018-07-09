@@ -1,5 +1,6 @@
 open Jest;
 open Github;
+open FetchResponse;
 
 Enzyme.configureEnzyme(Enzyme.react_16_adapter());
 

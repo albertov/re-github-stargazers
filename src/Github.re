@@ -1,3 +1,5 @@
+open FetchResponse;
+
 type license = {
     name: string,
     spdxId: string
@@ -48,14 +50,6 @@ let nextPageUrl : Fetch.Headers.t => option(string) = hdrs => {
         |> Js.Re.exec(links)
         |> Js.Option.andThen((.m)=>Js.toOption(Js.Re.captures(m)[1])));
 }
-
-type fetchResponse('a) =
-  | Success('a, option(string))
-  | NetworkError(Js.Promise.error)
-  | DecodeError(exn)
-  | NotFound
-  | UnexpectedStatus(int)
-  ;
 
 /***
  * `decodeResponse` decodes a `Fetch.Response` into an `fetchResponse`

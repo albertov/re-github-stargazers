@@ -1,66 +1,8 @@
 open Github;
+open FetchResponse;
 
 [@bs.val] external scrollTo : (int, int) => unit = "";
 
-module ErrorMessage = {
-    let component = ReasonReact.statelessComponent("ErrorMessage");
-    let make = (~message=ReasonReact.null, ~header=ReasonReact.null, children) => ReasonReact.({
-        ...component,
-        render: _self =>
-            <div className="ui error message">
-                <div className="header">
-                    (header)
-                </div>
-                <p>(message)</p>
-                (array(children))
-            </div>
-    });
-};
-
-module SwitchFetchResponse = {
-    let component = ReasonReact.statelessComponent("SwitchFetchResponse");
-    let make = ( ~value, ~successComp, ~notFoundComp=ReasonReact.null
-               , ~onClickNext=None, _children
-               ) => ReasonReact.({
-        ...component,
-        render: _self =>
-            switch(value) {
-            | Some(Success(items,nextPageUrl)) =>
-                <div>
-                    (successComp(items))
-                    (switch ((onClickNext, nextPageUrl)) {
-                    | (Some(action), Some(_)) =>
-                        <a href="#"
-                        className="link more"
-                            onClick=(ev => {
-                                ReactEventRe.Mouse.preventDefault(ev);
-                                action();
-                            })>(string("Load more"))</a>
-                    | _ => null
-                    })
-                </div>
-            | (Some(NetworkError(err))) =>
-                <ErrorMessage
-                    /* FIXME: Can we do better than stringifyAny? */
-                    message=string(Js.Option.getWithDefault("", Js.Json.stringifyAny(err)))
-                    header=string("There was an error when communicating with the API")
-                    />
-            | (Some(NotFound)) => notFoundComp
-            | (Some(DecodeError(err))) =>
-                <ErrorMessage
-                    /* FIXME: Can we do better than stringifyAny? */
-                    message=string(Js.Option.getWithDefault("", Js.Json.stringifyAny(err)))
-                    header=string("Could not decode reponse from the API")
-                    />
-            | (Some(UnexpectedStatus(status))) =>
-                <ErrorMessage
-                    message=string("Code: " ++ string_of_int(status))
-                    header=string("The server responded with an unexpected status code")
-                    />
-            | None => ReasonReact.null
-            }
-    });
-};
 
 type action =
   | Init
@@ -179,7 +121,7 @@ let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
                 <h2 className="header">
                     (string(state.orgname ++ "'s repositories"))
                 </h2>
-                <SwitchFetchResponse
+                <FetchResponse.Switch
                     value=state.repositories
                     successComp=(repositories =>
                         <Repositories repositories
@@ -187,7 +129,7 @@ let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
                                 send(SetSelected(repo)))
                             />)
                     notFoundComp=(
-                        <ErrorMessage
+                        <Message.Error
                             message=string("No such organization: " ++ state.orgname)
                             header=string("Not found")
                             />)
@@ -203,7 +145,7 @@ let make = (~orgname, ~client=defaultClient, ~maxStargazers=20, _children) => {
                     <h2 className="header">
                         (string(repo.fullName ++ "'s stargazers"))
                     </h2>
-                    <SwitchFetchResponse
+                    <FetchResponse.Switch
                         value=state.stargazers
                         successComp=(stargazers => <Stargazers stargazers maxStargazers />)
                     />
